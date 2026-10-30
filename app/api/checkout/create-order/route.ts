@@ -1,8 +1,9 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB, isDbConfigured } from "@/lib/db";
 import { asciiSafe, formatAmount, newTxnId, payuConfig, requestHash, siteUrl } from "@/lib/payu";
 import { priceCart } from "@/lib/pricing";
+import { getCustomer, getCustomerChecked } from "@/lib/session";
 import { checkoutSchema } from "@/lib/validation";
 import { Order, orderNumber } from "@/models/Order";
 
@@ -30,7 +31,42 @@ export async function POST(req: Request) {
     return fail("Please check your details.", 400, fields);
   }
 
-  const priced = priceCart(parsed.data.items); // server-side prices only
+  // no login cookie at all: ask to log in before anything else
+  if (!(await getCustomer())) {
+    return NextResponse.json(
+      { error: "Please log in to place your order.", loginUrl: "/login?next=/checkout&shop=1" },
+      { status: 401, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+  if (!isDbConfigured()) return fail("Online ordering is not available yet. Please try again soon.", 503);
+
+  // Buying needs an account: only a valid, current customer login may place an order.
+  let account: Awaited<ReturnType<typeof getCustomerChecked>>;
+  try {
+    account = await getCustomerChecked();
+  } catch (e) {
+    console.error("create-order: login check failed", e);
+    return fail("Could not check your login. Please try again.", 503);
+  }
+  if (!account || account === "stale") {
+    const login = "/login?next=/checkout&shop=1";
+    return NextResponse.json(
+      {
+        error: "Please log in to place your order.",
+        // an outdated login cookie is cleared first, otherwise /login would send the visitor straight back here
+        loginUrl: account === "stale" ? `/api/auth/logout?next=${encodeURIComponent(login)}` : login,
+      },
+      { status: 401, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  let priced: Awaited<ReturnType<typeof priceCart>>;
+  try {
+    priced = await priceCart(parsed.data.items); // server-side prices from the database only
+  } catch (e) {
+    console.error("create-order: could not load prices", e);
+    return fail("Could not load prices. Please try again.", 503);
+  }
   if (!priced.ok) return fail(priced.error);
 
   let cfg: ReturnType<typeof payuConfig>;
@@ -56,6 +92,7 @@ export async function POST(req: Request) {
       shipping: priced.shipping,
       total: priced.total,
       txnid,
+      userId: account.sub,
     });
 
     const amount = formatAmount(priced.total);

@@ -35,7 +35,8 @@ export function ProductPack({
       height={920}
       sizes={sizes}
       priority={priority}
-      className="h-full w-auto rounded-sm object-contain shadow-pack"
+      // fits tall packs and wider product photos alike; the shadow follows the photo, not its box
+      className="h-full w-auto max-w-full object-contain drop-shadow-[0_18px_22px_rgba(10,31,92,0.35)]"
     />
   );
 }

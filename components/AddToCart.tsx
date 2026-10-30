@@ -3,15 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
-import { getProduct } from "@/lib/products";
 import { useCart } from "./CartProvider";
 
-export function AddToCart({ slug, compact = false }: { slug: string; compact?: boolean }) {
+/** available = false shows a disabled "Coming soon" button instead. */
+export function AddToCart({ slug, compact = false, available = true }: { slug: string; compact?: boolean; available?: boolean }) {
   const { add, setOpen } = useCart();
   const router = useRouter();
   const [qty, setQty] = useState(1);
 
-  if (getProduct(slug)?.placeholder) {
+  if (!available) {
     return (
       <button disabled className="h-12 w-full cursor-not-allowed rounded-full bg-ink/10 font-bold text-ink/50">
         Coming soon

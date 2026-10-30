@@ -2,13 +2,17 @@ import Link from "next/link";
 import { inr } from "@/lib/format";
 import type { Product } from "@/lib/products";
 import { AddToCart } from "./AddToCart";
+import { MotherTagline } from "./MotherTagline";
 import { ProductPack } from "./ProductPack";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white transition-shadow hover:shadow-lg">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white transition-shadow hover:shadow-lg">
+      {product.status === "coming_soon" && (
+        <span className="absolute left-3 top-3 z-10 rounded-full bg-pack px-3 py-1 text-xs font-bold text-white">Coming soon</span>
+      )}
       <Link href={`/products/${product.slug}`} className="block bg-gradient-to-b from-honey-soft to-honey-mist">
-        <div className="flex h-72 items-center justify-center py-5">
+        <div className="flex h-60 items-center justify-center p-5">
           <ProductPack product={product} />
         </div>
       </Link>
@@ -26,12 +30,13 @@ export function ProductCard({ product }: { product: Product }) {
           </h3>
           <p className="mt-1 text-sm text-ink/70">{product.tagline}</p>
         </div>
+        <MotherTagline variant="compact" />
         <div className="mt-auto space-y-3">
           <p className="text-ink">
             <span className="text-xl font-bold">{inr(product.price)}</span>
-            <span className="ml-2 text-sm text-ink/60">{product.size}</span>
+            <span className="ml-2 text-sm text-ink/70">{product.size}</span>
           </p>
-          <AddToCart slug={product.slug} compact />
+          <AddToCart slug={product.slug} compact available={product.status === "live"} />
         </div>
       </div>
     </article>

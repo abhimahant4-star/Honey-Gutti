@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import type { Product } from "@/lib/products";
 import { ProductPack } from "./ProductPack";
@@ -13,7 +14,7 @@ export function Gallery({ product }: { product: Product }) {
         <ProductPack product={product} src={imgs[i]} priority sizes="(min-width:1024px) 40vw, 90vw" />
       </div>
       {imgs.length > 1 && (
-        <div className="mt-3 flex gap-3">
+        <div className="mt-3 flex flex-wrap gap-3">
           {imgs.map((src, idx) => (
             <button
               key={src}
@@ -22,8 +23,7 @@ export function Gallery({ product }: { product: Product }) {
               aria-current={idx === i}
               className={`h-24 w-16 overflow-hidden rounded border-2 ${idx === i ? "border-pack" : "border-transparent"}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <Image src={src} alt="" width={64} height={96} sizes="64px" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

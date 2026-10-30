@@ -40,10 +40,11 @@ export function Shop({ products }: { products: Product[] }) {
         </label>
       </div>
 
+      <h2 className="sr-only">Products</h2>
       {list.length === 0 ? (
         <p className="mt-12 text-center text-lg text-ink/70">No products match “{q}”. Try a different word.</p>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((p) => (
             <ProductCard key={p.slug} product={p} />
           ))}

@@ -12,7 +12,7 @@ export const policies: Policy[] = [
     description: "How Doy & Joy collects, uses and protects your personal information.",
     sections: [
       { h: "Who we are", p: [`This website is operated by ${seller}`] },
-      { h: "What we collect", p: ["When you place an order we collect your name, mobile number, email and delivery address. We also record the items you ordered and the payment status."] },
+      { h: "What we collect", p: ["When you place an order or create an account we collect your name, mobile number, email and delivery address. Account passwords are stored only in encrypted (hashed) form. We also record the items you ordered and the payment status."] },
       { h: "How we use it", p: ["We use your details only to process and deliver your order, confirm payment, answer your questions and meet legal and tax requirements. We do not sell your data."] },
       { h: "Payments", p: ["Payments are handled by PayU. Your card, UPI and bank details go directly to PayU and are never stored on our servers."] },
       { h: "Sharing", p: ["We share your name, phone number and address with delivery partners so they can deliver your order, and with PayU to process payment."] },

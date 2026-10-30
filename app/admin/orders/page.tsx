@@ -1,6 +1,9 @@
-import { connectDB } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { DatabaseNotice } from "@/components/DatabaseNotice";
+import { connectDB, isDbConfigured } from "@/lib/db";
 import { inr } from "@/lib/format";
 import { reconcileStale } from "@/lib/reconcile";
+import { getAdmin } from "@/lib/session";
 import { Order, OrderLean, orderNumber } from "@/models/Order";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +12,24 @@ export const runtime = "nodejs";
 const badge = { paid: "bg-leaf-soft text-leaf-dark", created: "bg-honey-soft text-ink", failed: "bg-red-100 text-red-800" } as const;
 
 export default async function AdminOrders() {
-  await connectDB();
+  // Authorization: only the admin session may see customer data (checked here and in middleware)
+  if (!(await getAdmin())) redirect("/admin/login?next=/admin/orders");
+
+  // No database yet (or it can't be reached): explain instead of crashing
+  if (!isDbConfigured()) return <DatabaseNotice reason="not-configured" />;
+  let orders: OrderLean[];
   try {
-    await reconcileStale(10); // ask PayU about "created" orders older than ~90 seconds
+    await connectDB();
+    try {
+      await reconcileStale(10); // ask PayU about "created" orders older than ~90 seconds
+    } catch (e) {
+      console.error("admin reconcile failed", e);
+    }
+    orders = (await Order.find().sort({ createdAt: -1 }).limit(200).lean()) as unknown as OrderLean[];
   } catch (e) {
-    console.error("admin reconcile failed", e);
+    console.error("admin orders: database error", e);
+    return <DatabaseNotice reason="unreachable" />;
   }
-  const orders = (await Order.find().sort({ createdAt: -1 }).limit(200).lean()) as unknown as OrderLean[];
   const paid = orders.filter((o) => o.status === "paid");
   const revenue = paid.reduce((s, o) => s + o.total, 0);
 
@@ -46,7 +60,7 @@ export default async function AdminOrders() {
                 </td>
                 <td className="px-4 py-3">{o.items.map((i) => `${i.name} × ${i.qty}`).join(", ")}</td>
                 <td className="px-4 py-3 font-semibold">{inr(o.total)}</td>
-                <td className="px-4 py-3">{o.customer.name}<br />{o.customer.phone}<br />{o.customer.email}{o.customer.email && <br />}{o.customer.address}, {o.customer.city}, {o.customer.state} {o.customer.pin}</td>
+                <td className="px-4 py-3">{o.customer.name}{o.userId && <span className="ml-1 rounded bg-leaf-soft px-1.5 text-xs text-leaf-dark">account</span>}<br />{o.customer.phone}<br />{o.customer.email}{o.customer.email && <br />}{o.customer.address}, {o.customer.city}, {o.customer.state} {o.customer.pin}</td>
                 <td className="px-4 py-3 text-xs text-ink/70">
                   {o.txnid ? <>Txn {o.txnid}<br /></> : "—"}
                   {o.payuPaymentId && <>ID {o.payuPaymentId}<br /></>}

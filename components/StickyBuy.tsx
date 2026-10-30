@@ -8,7 +8,7 @@ import { useCart } from "./CartProvider";
 export function StickyBuy({ slug, name, price }: { slug: string; name: string; price: number }) {
   const { add } = useCart();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-ink/10 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+    <div data-sticky-buy className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-ink/10 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-ink/70">{name}</p>
         <p className="text-lg font-bold">{inr(price)}</p>

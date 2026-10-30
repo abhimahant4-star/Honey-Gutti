@@ -21,8 +21,8 @@ const initials = (name: string) =>
 
 export function AboutUs() {
   return (
-    <section id="about" aria-labelledby="about-title" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
-      <p className="font-semibold uppercase tracking-wider text-honey-deep">About us</p>
+    <section id="about" aria-labelledby="about-title" className="mx-auto max-w-6xl px-4 py-16">
+      <p className="font-semibold uppercase tracking-wider text-honey-dark">About us</p>
       <h2 id="about-title" className="mt-2 font-display text-3xl font-bold sm:text-4xl">
         The Doy &amp; Joy Group of Companies
       </h2>
@@ -121,7 +121,7 @@ export function AboutUs() {
               </span>
               <div>
                 <p className="font-display text-lg font-bold leading-tight">Lakshay Arora</p>
-                <p className="flex items-center gap-1 text-sm font-semibold text-honey-deep">
+                <p className="flex items-center gap-1 text-sm font-semibold text-honey-dark">
                   <Rocket size={14} aria-hidden /> Chief Executive Officer
                 </p>
               </div>

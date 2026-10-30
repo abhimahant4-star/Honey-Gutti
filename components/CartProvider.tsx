@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
-import { products } from "@/lib/products";
+import type { CartProduct } from "@/lib/products";
 import { site } from "@/lib/site";
+import { loginToShop, useMe } from "./useMe";
 
 type Lines = Record<string, number>; // slug -> qty
 
@@ -45,10 +46,12 @@ type CartCtx = {
 const Ctx = createContext<CartCtx | null>(null);
 const KEY = "doyjoy-cart-v1";
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+/** products = live products and prices from the database (passed in by the server). */
+export function CartProvider({ children, products }: { children: React.ReactNode; products: CartProduct[] }) {
   const [lines, dispatch] = useReducer(reducer, {});
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const me = useMe();
 
   useEffect(() => {
     try {
@@ -58,24 +61,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, []);
 
+  // The cart belongs to a logged-in customer. Logged out (or someone else on this device): empty it.
   useEffect(() => {
-    if (!ready) return;
+    if (me !== null) return;
+    dispatch({ type: "clear" });
+    setOpen(false);
+    try {
+      localStorage.removeItem(KEY);
+    } catch {}
+  }, [me]);
+
+  useEffect(() => {
+    if (!ready || !me) return;
     try {
       localStorage.setItem(KEY, JSON.stringify(lines));
     } catch {}
-  }, [lines, ready]);
+  }, [lines, ready, me]);
 
-  const add = useCallback((slug: string, qty = 1) => {
-    dispatch({ type: "add", slug, qty });
-    setOpen(true);
-  }, []);
+  const add = useCallback(
+    (slug: string, qty = 1) => {
+      if (me === null) {
+        // guests must log in first; they come back to this product afterwards
+        window.location.assign(loginToShop(`/products/${slug}`));
+        return;
+      }
+      dispatch({ type: "add", slug, qty });
+      setOpen(true);
+    },
+    [me]
+  );
   const setQty = useCallback((slug: string, qty: number) => dispatch({ type: "set", slug, qty }), []);
   const clear = useCallback(() => dispatch({ type: "clear" }), []);
 
   const value = useMemo<CartCtx>(() => {
-    const items = Object.entries(lines).flatMap(([slug, qty]) => {
+    const items = Object.entries(me ? lines : {}).flatMap(([slug, qty]) => {
       const p = products.find((x) => x.slug === slug);
-      return p ? [{ slug, qty, name: p.name, price: p.price, image: p.images[0] }] : [];
+      return p ? [{ slug, qty, name: p.name, price: p.price, image: p.image }] : []; // sold-out or removed products drop out
     });
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
     const shipping = subtotal === 0 || subtotal >= site.freeShippingAbove ? 0 : site.shippingFee;
@@ -91,7 +112,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setQty,
       clear,
     };
-  }, [lines, open, add, setQty, clear]);
+  }, [lines, open, add, setQty, clear, me, products]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

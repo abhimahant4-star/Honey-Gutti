@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { inr } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -22,29 +21,19 @@ export function CartDrawer() {
   const toFree = Math.max(0, site.freeShippingAbove - subtotal);
 
   return (
-    <AnimatePresence>
+    <>
       {open && (
         <>
-          <motion.div
-            className="fixed inset-0 z-50 bg-ink/50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setOpen(false)}
-          />
-          <motion.aside
+          <div className="fixed inset-0 z-50 animate-fade-in bg-ink/50" onClick={() => setOpen(false)} />
+          <aside
             role="dialog"
             aria-modal="true"
             aria-label="Your cart"
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.25 }}
+            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md animate-slide-in flex-col bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
               <h2 className="font-display text-xl font-bold text-ink">Your cart</h2>
-              <button onClick={() => setOpen(false)} aria-label="Close cart" className="grid h-10 w-10 place-items-center rounded-full hover:bg-honey-soft">
+              <button autoFocus onClick={() => setOpen(false)} aria-label="Close cart" className="grid h-10 w-10 place-items-center rounded-full hover:bg-honey-soft">
                 <X size={20} />
               </button>
             </div>
@@ -89,7 +78,7 @@ export function CartDrawer() {
                               <Plus size={16} />
                             </button>
                           </div>
-                          <button className="p-2 text-ink/60 hover:text-red-600" aria-label={`Remove ${i.name}`} onClick={() => setQty(i.slug, 0)}>
+                          <button className="p-2 text-ink/70 hover:text-red-600" aria-label={`Remove ${i.name}`} onClick={() => setQty(i.slug, 0)}>
                             <Trash2 size={18} />
                           </button>
                         </div>
@@ -108,13 +97,20 @@ export function CartDrawer() {
                   >
                     Checkout
                   </Link>
+                  <Link
+                    href="/cart"
+                    onClick={() => setOpen(false)}
+                    className="block rounded-full border-2 border-pack py-3 text-center font-bold text-pack hover:bg-pack hover:text-white"
+                  >
+                    View cart
+                  </Link>
                 </div>
               </>
             )}
-          </motion.aside>
+          </aside>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }
 
