@@ -10,7 +10,7 @@ export async function guardAdmin(req: Request): Promise<NextResponse | null> {
   if (!isDbConfigured()) return jsonError("The database is not connected.", 503);
   return null;
 }
-
+ 
 export function adminDbError(e: unknown, what: string) {
   if (isDbConnectionError(e)) return jsonError("Can't connect to the database. Check MONGODB_URI and Network Access in MongoDB Atlas.", 503);
   console.error(`admin ${what} failed`, e);
